@@ -64,4 +64,14 @@ public interface StudentInfoService {
      */
     Page<StudentInfo> findPageByAge(PageReq pageReq, Integer age);
 
+    /**
+     * 查询指定手机号的学生信息
+     * 分页查询数据
+     *
+     * @param pageReq 分页参数
+     * @param phone   查询的学生年龄
+     * @return .
+     */
+    Page<StudentInfo> findPageByPhone(PageReq pageReq, String phone);
+
 }
