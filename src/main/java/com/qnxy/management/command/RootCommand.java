@@ -4,9 +4,12 @@ import com.qnxy.management.Command;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 /**
  * 顶级命令信息定义
- * 
+ *
  * @author Qnxy
  */
 @RequiredArgsConstructor
@@ -35,5 +38,17 @@ public enum RootCommand implements Command {
     @Override
     public String cmdDesc() {
         return cmdDesc;
+    }
+
+    public static Optional<RootCommand> cmdNumOf(String cmdNumStr) {
+        try {
+            final int cmdNum = Integer.parseInt(cmdNumStr);
+            
+            return Arrays.stream(values())
+                    .filter(it -> it.cmdNum == cmdNum)
+                    .findFirst();
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 }

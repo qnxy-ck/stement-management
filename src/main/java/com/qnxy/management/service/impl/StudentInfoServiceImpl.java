@@ -43,4 +43,9 @@ public class StudentInfoServiceImpl implements StudentInfoService {
     public Page<StudentInfo> findPageByAge(PageReq pageReq, Integer age) {
         return null;
     }
+
+    @Override
+    public Page<StudentInfo> findPageByPhone(PageReq pageReq, String phone) {
+        return null;
+    }
 }
