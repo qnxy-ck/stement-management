@@ -86,21 +86,25 @@ public class CommandService {
                 return false;
             }
             case FIND_BY_ID -> this.findById();
-            case FIND_PAGE_BY_AGE, FIND_PAGE_BY_PHONE -> printText("功能暂未实现, 尽请期待.\n", ONE);
+            case FIND_PAGE_BY_AGE -> printText("功能暂未实现, 尽请期待.\n", ONE);
+            case FIND_PAGE_BY_PHONE -> this.findPageByPhone();
         }
 
         return true;
     }
 
+    private void findPageByPhone() {
+        final String phone = readNextCommand("请输入查询手机号: ", ONE, NOT_NULL_MAPPING_FUN);
+
+        Optional<StudentInfo> pageByPhone = this.studentInfoService.findPageByPhone(phone);
+        printStudent(pageByPhone.orElse(null), ONE);
+    }
+
     private void findById() {
         final Integer index = readNextCommand("请输入需要查询的序号: ", ONE, parseToInt());
-        final Optional<StudentInfo> studentInfoOptional = this.studentInfoService.findById(index);
-        if (studentInfoOptional.isEmpty()) {
-            printText("没有找到该序号对应的信息 -> " + index + "\n", ONE);
-            return;
-        }
 
-        printStudent(studentInfoOptional.get(), ONE);
+        final Optional<StudentInfo> studentInfoOptional = this.studentInfoService.findById(index);
+        printStudent(studentInfoOptional.orElse(null), ONE);
     }
 
     /**
@@ -113,9 +117,14 @@ public class CommandService {
     private void loopPageQuery(PageReq pageReq, Function<PageReq, Page<StudentInfo>> pageFind) {
         PageReq p = pageReq;
         Page<StudentInfo> page = pageFind.apply(pageReq);
-        printPageStudent(page, ONE);
+        boolean isFirst = true;
+
 
         while (true) {
+            if (printPageStudent(page, ONE) && isFirst) {
+                return;
+            }
+
             printCommandInfo(PageCommand.values(), ONE);
             final PageCommand pageCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(PageCommand::pageCmdValOf));
 
@@ -148,7 +157,7 @@ public class CommandService {
             }
 
             page = pageFind.apply(p);
-            printPageStudent(page, ONE);
+            isFirst = false;
         }
     }
 
@@ -207,7 +216,7 @@ public class CommandService {
                 .setPhone(phone)
                 .setBirthday(birthday)
                 .setGender(gender);
-        ;
+
         studentInfo = this.studentInfoService.addStudentInfo(studentInfo);
         printText("添加成功: \n", ONE);
         printStudent(studentInfo, ONE);
@@ -281,21 +290,32 @@ public class CommandService {
      * 打印学生信息
      */
     private static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
+
+        if (studentInfo == null) {
+            printText("没有找到任何匹配数据\n", ONE);
+            return;
+        }
+
         printText(
                 String.format("- %s%n", studentInfo),
                 indentLevel
         );
     }
 
-    private static void printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
+    /***
+     * 没有数据直接返回 true
+     */
+    private static boolean printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
         Collection<StudentInfo> studentInfos = studentInfoPage.getRecords();
         if (studentInfos.isEmpty()) {
             printText("没有找到任何信息!\n", ONE);
-            return;
+            return true;
         }
 
         studentInfos.forEach(it -> printStudent(it, indentLevel));
         printPageInfo(studentInfoPage, indentLevel);
+
+        return false;
     }
 
 }

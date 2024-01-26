@@ -77,10 +77,9 @@ public interface StudentInfoService {
      * 查询指定手机号的学生信息
      * 分页查询数据
      *
-     * @param pageReq 分页参数
-     * @param phone   查询的学生年龄
+     * @param phone 查询的学生年龄
      * @return .
      */
-    Page<StudentInfo> findPageByPhone(PageReq pageReq, String phone);
+    Optional<StudentInfo> findPageByPhone(String phone);
 
 }

@@ -9,7 +9,13 @@ import com.qnxy.management.store.MemoryDataStores;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import static com.qnxy.management.store.MemoryDataStores.findOneByCondition;
+import static com.qnxy.management.store.MemoryDataStores.findPageByCondition;
 
 /**
  * 学生信息管理Service impl
@@ -55,10 +61,7 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public Optional<StudentInfo> findById(Integer id) {
-        return MemoryDataStores.getStudentInfoStore()
-                .stream()
-                .filter(it -> it.getId().equals(id))
-                .findFirst();
+        return findOneByCondition(MemoryDataStores.getStudentInfoStore(), it -> Objects.equals(it.getId(), id));
     }
 
     @Override
@@ -68,9 +71,11 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public Page<StudentInfo> findAllByPage(PageReq pageReq) {
-        List<StudentInfo> list = getPageData(pageReq, MemoryDataStores.getStudentInfoStore());
-
-        return Page.of(list, MemoryDataStores.getStudentInfoStore().size(), pageReq);
+        return findPageByCondition(
+                pageReq,
+                MemoryDataStores.getStudentInfoStore(),
+                it -> true
+        );
     }
 
     @Override
@@ -79,31 +84,12 @@ public class StudentInfoServiceImpl implements StudentInfoService {
     }
 
     @Override
-    public Page<StudentInfo> findPageByPhone(PageReq pageReq, String phone) {
-        return null;
+    public Optional<StudentInfo> findPageByPhone( String phone) {
+        return findOneByCondition(
+                MemoryDataStores.getStudentInfoStore(),
+                it -> Objects.equals(it.getPhone(), phone)
+        );
     }
 
 
-    private static List<StudentInfo> getPageData(PageReq pageReq, Set<StudentInfo> sourceCollection) {
-        int startIndex = (pageReq.getCurrentPage() - 1) * pageReq.getPageSize();
-
-        final List<StudentInfo> list = new ArrayList<>();
-
-        Iterator<StudentInfo> iterator = sourceCollection.iterator();
-        int index = 0;
-        while (iterator.hasNext()) {
-            StudentInfo next = iterator.next();
-            if (index >= startIndex) {
-
-                list.add(next);
-
-                if (list.size() == pageReq.getPageSize()) {
-                    break;
-                }
-            }
-            index++;
-        }
-
-        return list;
-    }
 }
