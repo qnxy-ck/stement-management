@@ -1,5 +1,7 @@
 package com.qnxy.management.data;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -8,7 +10,8 @@ import lombok.Data;
  * @author Qnxy
  */
 @Data
-public class PageReq {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public final class PageReq {
 
     /**
      * 每页默认大小
@@ -23,12 +26,12 @@ public class PageReq {
     /**
      * 查询每页展示条数
      */
-    private int pageSize;
+    private final int pageSize;
 
     /**
      * 查询指定页数
      */
-    private int currentPage;
+    private final int currentPage;
 
 
     public int getPageSize() {
@@ -45,5 +48,22 @@ public class PageReq {
     public int getCurrentPage() {
         // 最小页数为 1
         return Math.max(currentPage, 1);
+    }
+
+    public PageReq upPage() {
+        return new PageReq(this.pageSize, this.currentPage - 1);
+    }
+
+    public PageReq downPage() {
+        return new PageReq(this.pageSize, this.currentPage + 1);
+    }
+
+
+    public static PageReq of(int pageSize, int currentPage) {
+        return new PageReq(pageSize, currentPage);
+    }
+
+    public static PageReq defaultPage() {
+        return new PageReq(DEFAULT_PAGE_SIZE, 1);
     }
 }

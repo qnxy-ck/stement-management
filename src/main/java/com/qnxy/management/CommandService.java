@@ -2,7 +2,10 @@ package com.qnxy.management;
 
 import com.qnxy.management.command.ConfirmationCommand;
 import com.qnxy.management.command.MoreFindMethodCommand;
+import com.qnxy.management.command.PageCommand;
 import com.qnxy.management.command.RootCommand;
+import com.qnxy.management.data.Page;
+import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.data.entity.StudentInfo.Gender;
 import com.qnxy.management.exceptions.ReadCommandMappingException;
@@ -14,12 +17,12 @@ import com.qnxy.management.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static com.qnxy.management.util.PrintHelper.printCommandInfo;
-import static com.qnxy.management.util.PrintHelper.printText;
+import static com.qnxy.management.util.PrintHelper.*;
 import static com.qnxy.management.util.PrintIndentLevel.ONE;
 import static com.qnxy.management.util.PrintIndentLevel.ZERO;
 import static com.qnxy.management.util.ReadCommandUtil.readNextCommand;
@@ -58,7 +61,7 @@ public class CommandService {
                     case UPDATE_STUDENT -> updateStudent();
                     case DELETE_STUDENT -> deleteStudent();
                     case FIND_ALL_STUDENT -> findAllStudent();
-                    case FIND_PAGE_STUDENT -> findPageStudent();
+                    case FIND_PAGE_STUDENT -> findStudentByPage();
                     case MORE_FIND_METHOD -> {
                         //noinspection StatementWithEmptyBody
                         while (moreFindMethod()) ;
@@ -103,9 +106,52 @@ public class CommandService {
     /**
      * 分页查找学生信息
      */
-    private void findPageStudent() {
-        printText("功能暂未实现, 尽请期待.\n", ZERO);
+    private void findStudentByPage() {
+        loopPageQuery(PageReq.defaultPage(), this.studentInfoService::findAllByPage);
     }
+
+    private void loopPageQuery(PageReq pageReq, Function<PageReq, Page<StudentInfo>> pageFind) {
+        PageReq p = pageReq;
+        Page<StudentInfo> page = pageFind.apply(pageReq);
+        printPageStudent(page, ONE);
+
+        while (true) {
+            printCommandInfo(PageCommand.values(), ONE);
+            final PageCommand pageCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(PageCommand::pageCmdValOf));
+
+            switch (pageCommand) {
+                case GO_BACK -> {
+                    return;
+                }
+
+                case UP_PAGE -> {
+                    if (p.getCurrentPage() <= 1) {
+                        printText("已经是第一页了!\n", ONE);
+                        continue;
+                    }
+                    p = p.upPage();
+                }
+
+                case DOWN_PAGE -> {
+                    if (p.getCurrentPage() >= page.getTotalPage()) {
+                        printText("已经是最后一页了!\n", ONE);
+                        continue;
+                    }
+                    p = p.downPage();
+                }
+
+                case PAGE_NUM -> {
+                    final Integer pn = readNextCommand("请输入指定页数: ", ONE, parseToInt());
+
+                    p = PageReq.of(p.getPageSize(), pn);
+                }
+            }
+
+            page = pageFind.apply(p);
+            printPageStudent(page, ONE);
+        }
+    }
+
 
     /**
      * 查询所有学生信息
@@ -239,6 +285,17 @@ public class CommandService {
                 String.format("- %s%n", studentInfo),
                 indentLevel
         );
+    }
+
+    private static void printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
+        Collection<StudentInfo> studentInfos = studentInfoPage.getRecords();
+        if (studentInfos.isEmpty()) {
+            printText("没有找到任何信息!\n", ONE);
+            return;
+        }
+
+        studentInfos.forEach(it -> printStudent(it, indentLevel));
+        printPageInfo(studentInfoPage, indentLevel);
     }
 
 }

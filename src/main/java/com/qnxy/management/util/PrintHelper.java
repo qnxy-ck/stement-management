@@ -1,10 +1,12 @@
 package com.qnxy.management.util;
 
 import com.qnxy.management.Command;
+import com.qnxy.management.data.Page;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * 控制台信息打印助手
@@ -37,7 +39,7 @@ public final class PrintHelper {
                 .map(it -> it * 2 + 5)
                 .orElse(0);
 
-        printLine(maxTipsLength, indentLevel);
+        printLine(maxTipsLength, '=', indentLevel);
 
         for (E e : arr) {
             printText(
@@ -45,7 +47,7 @@ public final class PrintHelper {
                     indentLevel
             );
         }
-        printLine(maxTipsLength, indentLevel);
+        printLine(maxTipsLength, '=', indentLevel);
     }
 
     /**
@@ -53,8 +55,8 @@ public final class PrintHelper {
      *
      * @param lineCount 打印数量
      */
-    private static void printLine(int lineCount, PrintIndentLevel indentLevel) {
-        printText("=".repeat(lineCount) + "\n", indentLevel);
+    private static void printLine(int lineCount, char lineText, PrintIndentLevel indentLevel) {
+        printText((lineText + "").repeat(lineCount) + "\n", indentLevel);
     }
 
     /**
@@ -68,6 +70,20 @@ public final class PrintHelper {
             System.out.print(" ");
         }
         System.out.print(text);
+    }
+
+
+    public static void printPageInfo(Page<?> page, PrintIndentLevel indentLevel) {
+        final var pageInfo = String.format(
+                "+ 当前页: %s\t当前页条数: %s\t总条数:%s\t总页数:%s%n%n",
+                page.getCurrentPage(),
+                page.getCurrentPageSize(),
+                page.getTotal(),
+                page.getTotalPage()
+        );
+
+        printLine(pageInfo.length() * 2, '-', indentLevel);
+        printText(pageInfo, indentLevel);
     }
 
 
