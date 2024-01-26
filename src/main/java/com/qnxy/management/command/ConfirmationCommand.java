@@ -20,12 +20,12 @@ public enum ConfirmationCommand implements Command {
     YES(1, "确定");
 
 
-    private final int quitNum;
+    private final int confirmVal;
     private final String cmdDesc;
 
     @Override
-    public int cmdNum() {
-        return quitNum;
+    public int cmdVal() {
+        return confirmVal;
     }
 
     @Override
@@ -33,10 +33,10 @@ public enum ConfirmationCommand implements Command {
         return cmdDesc;
     }
 
-    public static Optional<ConfirmationCommand> quitNumOf(Integer quitNum) {
+    public static Optional<ConfirmationCommand> confirmValOf(Integer confirmVal) {
 
         return Arrays.stream(values())
-                .filter(it -> it.quitNum == quitNum)
+                .filter(it -> it.confirmVal == confirmVal)
                 .findFirst();
 
     }

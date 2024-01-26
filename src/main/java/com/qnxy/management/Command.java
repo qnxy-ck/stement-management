@@ -10,7 +10,7 @@ public interface Command {
     /**
      * 命编号
      */
-    int cmdNum();
+    int cmdVal();
 
     /**
      * 命令描述

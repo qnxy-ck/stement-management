@@ -1,6 +1,7 @@
 package com.qnxy.management;
 
 import com.qnxy.management.command.ConfirmationCommand;
+import com.qnxy.management.command.MoreFindMethodCommand;
 import com.qnxy.management.command.RootCommand;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.data.entity.StudentInfo.Gender;
@@ -13,6 +14,7 @@ import com.qnxy.management.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -48,7 +50,7 @@ public class CommandService {
             printCommandInfo(RootCommand.values(), ZERO);
 
             try {
-                final RootCommand rootCommand = readNextCommand("请输入对应命令: ", ZERO, parseIntValEnum(RootCommand::cmdNumOf));
+                final RootCommand rootCommand = readNextCommand("请输入对应命令: ", ZERO, parseIntValEnum(RootCommand::cmdValOf));
 
                 switch (rootCommand) {
                     case QUIT -> quit();
@@ -57,7 +59,10 @@ public class CommandService {
                     case DELETE_STUDENT -> deleteStudent();
                     case FIND_ALL_STUDENT -> findAllStudent();
                     case FIND_PAGE_STUDENT -> findPageStudent();
-                    case MORE_FIND_METHOD -> moreFindMethod();
+                    case MORE_FIND_METHOD -> {
+                        //noinspection StatementWithEmptyBody
+                        while (moreFindMethod()) ;
+                    }
                 }
             } catch (Exception e) {
                 printText("操作失败: " + e.getMessage() + "\n", ZERO);
@@ -69,8 +74,30 @@ public class CommandService {
     /**
      * 更多查询方式
      */
-    private void moreFindMethod() {
-        printText("功能暂未实现, 尽请期待.\n", ZERO);
+    private boolean moreFindMethod() {
+        printCommandInfo(MoreFindMethodCommand.values(), ONE);
+
+        final MoreFindMethodCommand moreFindMethodCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(MoreFindMethodCommand::moreFindValOf));
+        switch (moreFindMethodCommand) {
+            case GO_BACK -> {
+                return false;
+            }
+            case FIND_BY_ID -> this.findById();
+            case FIND_PAGE_BY_AGE, FIND_PAGE_BY_PHONE -> printText("功能暂未实现, 尽请期待.\n", ONE);
+        }
+
+        return true;
+    }
+
+    private void findById() {
+        final Integer index = readNextCommand("请输入需要查询的序号: ", ONE, parseToInt());
+        final Optional<StudentInfo> studentInfoOptional = this.studentInfoService.findById(index);
+        if (studentInfoOptional.isEmpty()) {
+            printText("没有找到该序号对应的信息 -> " + index + "\n", ONE);
+            return;
+        }
+
+        printStudent(studentInfoOptional.get(), ONE);
     }
 
     /**
@@ -84,7 +111,14 @@ public class CommandService {
      * 查询所有学生信息
      */
     private void findAllStudent() {
-        this.studentInfoService.findAll()
+        final List<StudentInfo> studentInfoList = this.studentInfoService.findAll();
+
+        if (studentInfoList.isEmpty()) {
+            printText("没有找到任何信息!\n", ONE);
+            return;
+        }
+
+        studentInfoList
                 .forEach(it -> printStudent(it, ONE));
     }
 
@@ -92,7 +126,16 @@ public class CommandService {
      * 删除学生信息
      */
     private void deleteStudent() {
-        printText("功能暂未实现, 尽请期待.\n", ZERO);
+        final Integer index = readNextCommand("请输入需要删除的序号: ", ZERO, parseToInt());
+
+        printCommandInfo(ConfirmationCommand.values(), ONE);
+        final ConfirmationCommand confirmationCommand = readNextCommand("确认删除吗: ", ONE, parseIntValEnum(ConfirmationCommand::confirmValOf));
+        if (confirmationCommand != ConfirmationCommand.YES) {
+            return;
+        }
+
+        boolean flag = this.studentInfoService.deleteById(index);
+        printText(flag ? "删除成功\n" : "学生信息不存在 -> " + index + "\n", ONE);
     }
 
     /**
@@ -110,7 +153,7 @@ public class CommandService {
         final String actualName = readNextCommand("请输入真实姓名: ", ONE, NOT_NULL_MAPPING_FUN);
         final String phone = readNextCommand("请输入手机号: ", ONE, NOT_NULL_MAPPING_FUN);
         final LocalDate birthday = readNextCommand("请输入生日, 格式为[yyyy-MM-dd]: ", ONE, toLocalDate());
-        final Gender gender = readNextCommand(String.format("请输入性别, 可选项[%s]: ", Gender.genderNumList()), ONE, parseIntValEnum(Gender::genderNumOf));
+        final Gender gender = readNextCommand(String.format("请输入性别, 可选项[%s]: ", Gender.genderNumList()), ONE, parseIntValEnum(Gender::genderValOf));
 
         StudentInfo studentInfo = new StudentInfo()
                 .setNickname(nickName)
@@ -118,7 +161,7 @@ public class CommandService {
                 .setPhone(phone)
                 .setBirthday(birthday)
                 .setGender(gender);
-
+        ;
         studentInfo = this.studentInfoService.addStudentInfo(studentInfo);
         printText("添加成功: \n", ONE);
         printStudent(studentInfo, ONE);
@@ -129,13 +172,12 @@ public class CommandService {
      */
     private void quit() {
         printCommandInfo(ConfirmationCommand.values(), ZERO);
-        final ConfirmationCommand confirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(ConfirmationCommand::quitNumOf));
+        final ConfirmationCommand confirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(ConfirmationCommand::confirmValOf));
 
         if (confirmationCommand == ConfirmationCommand.YES) {
             printText("Bye!", ZERO);
             System.exit(0);
         }
-
     }
 
     /**
@@ -154,7 +196,7 @@ public class CommandService {
     }
 
     /**
-     * 解析用户输入的信息, 转换为对应美剧
+     * 解析用户输入的信息, 转换为对应枚举
      *
      * @param mapping 转换到那个美剧
      * @param <E>     枚举类型
@@ -167,21 +209,34 @@ public class CommandService {
             try {
                 genderNum = Integer.parseInt(it);
             } catch (NumberFormatException e) {
-                throw new ReadCommandMappingException("不存在的类型 -> " + it);
+                throw new ReadCommandMappingException("不存在的命令 -> " + it);
             }
 
             return mapping.apply(genderNum)
-                    .orElseThrow(() -> new ReadCommandMappingException("不存在的类型 -> " + it));
+                    .orElseThrow(() -> new ReadCommandMappingException("不存在的命令 -> " + it));
         };
     }
 
+    /**
+     * 将字符串转换为int类型
+     */
+    private static ReadCommandUtil.ReadTextMapping<Integer> parseToInt() {
+        return it -> {
+            NOT_NULL_MAPPING_FUN.apply(it);
+            try {
+                return Integer.parseInt(it);
+            } catch (NumberFormatException e) {
+                throw new ReadCommandMappingException("请输入正确的数值 -> " + it);
+            }
+        };
+    }
 
     /**
      * 打印学生信息
      */
-    private  static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
+    private static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
         printText(
-                String.format("- %s", studentInfo),
+                String.format("- %s%n", studentInfo),
                 indentLevel
         );
     }

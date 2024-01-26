@@ -26,13 +26,13 @@ public enum RootCommand implements Command {
 
     ;
 
-    private final int cmdNum;
+    private final int cmdVal;
     private final String cmdDesc;
 
 
     @Override
-    public int cmdNum() {
-        return cmdNum;
+    public int cmdVal() {
+        return cmdVal;
     }
 
     @Override
@@ -40,9 +40,9 @@ public enum RootCommand implements Command {
         return cmdDesc;
     }
 
-    public static Optional<RootCommand> cmdNumOf(Integer cmdNum) {
+    public static Optional<RootCommand> cmdValOf(Integer cmdVal) {
         return Arrays.stream(values())
-                .filter(it -> it.cmdNum == cmdNum)
+                .filter(it -> it.cmdVal == cmdVal)
                 .findFirst();
 
     }

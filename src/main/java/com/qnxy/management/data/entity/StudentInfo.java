@@ -6,6 +6,7 @@ import lombok.experimental.Accessors;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -80,6 +81,21 @@ public class StudentInfo {
     private LocalDateTime updatedAt;
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StudentInfo that = (StudentInfo) o;
+
+        return Objects.equals(phone, that.phone);
+    }
+
+    @Override
+    public int hashCode() {
+        return phone != null ? phone.hashCode() : 0;
+    }
+
+    @Override
     public String toString() {
         return "学生信息{" +
                 "id=" + id +
@@ -115,20 +131,20 @@ public class StudentInfo {
          */
         BOY(2, "男");
 
-        private final int genderNum;
+        private final int genderVal;
         private final String genderName;
 
         private static final String GENDER_NUMBER_LIST_STR = Arrays.stream(values())
-                .map(it -> String.format("%s: %s", it.genderName, it.genderNum))
+                .map(it -> String.format("%s: %s", it.genderName, it.genderVal))
                 .collect(Collectors.joining(", "));
 
         public static String genderNumList() {
             return GENDER_NUMBER_LIST_STR;
         }
 
-        public static Optional<Gender> genderNumOf(Integer genderNum) {
+        public static Optional<Gender> genderValOf(Integer genderVal) {
             return Arrays.stream(values())
-                    .filter(it -> it.genderNum == genderNum)
+                    .filter(it -> it.genderVal == genderVal)
                     .findFirst();
 
         }

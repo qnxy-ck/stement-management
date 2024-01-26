@@ -18,11 +18,11 @@ public enum PageCommand implements Command {
     PAGE_NUM(3, "指定页数查询")
     ;
 
-    private final int cmdNum;
+    private final int pageCmdVal;
     private final String cmdDesc;
     @Override
-    public int cmdNum() {
-        return cmdNum;
+    public int cmdVal() {
+        return pageCmdVal;
     }
 
     @Override

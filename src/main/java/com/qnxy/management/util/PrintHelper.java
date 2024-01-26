@@ -32,21 +32,20 @@ public final class PrintHelper {
 
         // 计算出打印分割线数量
         final int maxTipsLength = Arrays.stream(arr)
-                .map(it -> (it.cmdNum() + it.cmdDesc()).length())
+                .map(it -> (it.cmdVal() + it.cmdDesc()).length())
                 .max(Integer::compareTo)
-                .map(it -> it * 2 + 1)
+                .map(it -> it * 2 + 5)
                 .orElse(0);
 
-        printText("\n", PrintIndentLevel.ZERO);
-        printLine(maxTipsLength);
+        printLine(maxTipsLength, indentLevel);
 
         for (E e : arr) {
             printText(
-                    String.format("| %s. %s%n", e.cmdNum(), e.cmdDesc()),
+                    String.format("| %s. %s%n", e.cmdVal(), e.cmdDesc()),
                     indentLevel
             );
         }
-        printLine(maxTipsLength);
+        printLine(maxTipsLength, indentLevel);
     }
 
     /**
@@ -54,11 +53,8 @@ public final class PrintHelper {
      *
      * @param lineCount 打印数量
      */
-    private static void printLine(int lineCount) {
-        for (int i = 0; i < lineCount; i++) {
-            System.out.print('=');
-        }
-        System.out.println();
+    private static void printLine(int lineCount, PrintIndentLevel indentLevel) {
+        printText("=".repeat(lineCount) + "\n", indentLevel);
     }
 
     /**

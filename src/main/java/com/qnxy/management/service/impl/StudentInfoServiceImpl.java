@@ -3,12 +3,15 @@ package com.qnxy.management.service.impl;
 import com.qnxy.management.data.Page;
 import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
+import com.qnxy.management.exceptions.StudentManagementException;
 import com.qnxy.management.service.StudentInfoService;
 import com.qnxy.management.store.MemoryDataStores;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 学生信息管理Service impl
@@ -28,13 +31,16 @@ public class StudentInfoServiceImpl implements StudentInfoService {
     @Override
     public StudentInfo addStudentInfo(StudentInfo studentInfo) {
         studentInfo.setId(nextIndex())
+                .setBirthday(LocalDate.now())
+                .setGender(StudentInfo.Gender.UNKNOWN)
                 .setPassword(DEFAULT_PASSWORD)
                 .setCreateAt(LocalDateTime.now())
                 .setUpdatedAt(LocalDateTime.now());
 
-        MemoryDataStores.getStudentInfoMap()
-                .put(new MemoryDataStores.StudentInfoKey(studentInfo.getId(), studentInfo.getPhone()), studentInfo);
-
+        final var flag = MemoryDataStores.getStudentInfoStore().add(studentInfo);
+        if (!flag) {
+            throw new StudentManagementException("该学生信息已存在, 无法添加 -> " + studentInfo.getPhone());
+        }
         return studentInfo;
     }
 
@@ -45,12 +51,21 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public boolean deleteById(Integer id) {
-        return false;
+        return MemoryDataStores.getStudentInfoStore()
+                .removeIf(it -> it.getId().equals(id));
+    }
+
+    @Override
+    public Optional<StudentInfo> findById(Integer id) {
+        return MemoryDataStores.getStudentInfoStore()
+                .stream()
+                .filter(it -> it.getId().equals(id))
+                .findFirst();
     }
 
     @Override
     public List<StudentInfo> findAll() {
-        return new ArrayList<>(MemoryDataStores.getStudentInfoMap().values());
+        return new ArrayList<>(MemoryDataStores.getStudentInfoStore());
     }
 
     @Override

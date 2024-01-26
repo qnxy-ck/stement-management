@@ -5,6 +5,7 @@ import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 学生信息管理Service
@@ -38,6 +39,14 @@ public interface StudentInfoService {
      * @return 是否删除成功 成功: true
      */
     boolean deleteById(Integer id);
+
+    /**
+     * 根据ID获取一个
+     *
+     * @param id ID
+     * @return .
+     */
+    Optional<StudentInfo> findById(Integer id);
 
     /**
      * 查询所有学生信息
