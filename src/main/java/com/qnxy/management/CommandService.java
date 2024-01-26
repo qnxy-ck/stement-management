@@ -1,6 +1,6 @@
 package com.qnxy.management;
 
-import com.qnxy.management.command.QuitConfirmationCommand;
+import com.qnxy.management.command.ConfirmationCommand;
 import com.qnxy.management.command.RootCommand;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.data.entity.StudentInfo.Gender;
@@ -84,7 +84,7 @@ public class CommandService {
      * 查询所有学生信息
      */
     private void findAllStudent() {
-        studentInfoService.findAll()
+        this.studentInfoService.findAll()
                 .forEach(it -> printStudent(it, ONE));
     }
 
@@ -119,7 +119,7 @@ public class CommandService {
                 .setBirthday(birthday)
                 .setGender(gender);
 
-        studentInfo = studentInfoService.addStudentInfo(studentInfo);
+        studentInfo = this.studentInfoService.addStudentInfo(studentInfo);
         printText("添加成功: \n", ONE);
         printStudent(studentInfo, ONE);
     }
@@ -128,10 +128,10 @@ public class CommandService {
      * 退出系统
      */
     private void quit() {
-        printCommandInfo(QuitConfirmationCommand.values(), ZERO);
-        final QuitConfirmationCommand quitConfirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(QuitConfirmationCommand::quitNumOf));
+        printCommandInfo(ConfirmationCommand.values(), ZERO);
+        final ConfirmationCommand confirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(ConfirmationCommand::quitNumOf));
 
-        if (quitConfirmationCommand == QuitConfirmationCommand.YES) {
+        if (confirmationCommand == ConfirmationCommand.YES) {
             printText("Bye!", ZERO);
             System.exit(0);
         }
@@ -179,7 +179,7 @@ public class CommandService {
     /**
      * 打印学生信息
      */
-    public static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
+    private  static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
         printText(
                 String.format("- %s", studentInfo),
                 indentLevel

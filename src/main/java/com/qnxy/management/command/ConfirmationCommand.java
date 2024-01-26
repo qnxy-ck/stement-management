@@ -14,10 +14,10 @@ import java.util.Optional;
  */
 @Getter
 @RequiredArgsConstructor
-public enum QuitConfirmationCommand implements Command {
+public enum ConfirmationCommand implements Command {
 
-    NO(0, "暂不退出"),
-    YES(1, "=== 确认退出 ===");
+    NO(0, "取消"),
+    YES(1, "确定");
 
 
     private final int quitNum;
@@ -33,7 +33,7 @@ public enum QuitConfirmationCommand implements Command {
         return cmdDesc;
     }
 
-    public static Optional<QuitConfirmationCommand> quitNumOf(Integer quitNum) {
+    public static Optional<ConfirmationCommand> quitNumOf(Integer quitNum) {
 
         return Arrays.stream(values())
                 .filter(it -> it.quitNum == quitNum)
