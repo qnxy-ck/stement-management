@@ -4,7 +4,7 @@ import com.qnxy.management.data.entity.StudentInfo;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -18,10 +18,14 @@ public final class MemoryDataStores {
     /**
      * 学生信息
      */
-    private static final Map<Integer, StudentInfo> STUDENT_INFO_MAP = new HashMap<>();
+    private static final Map<StudentInfoKey, StudentInfo> STUDENT_INFO_MAP = new LinkedHashMap<>();
+    
 
-    public static Map<Integer, StudentInfo> getStudentInfoMap() {
+    public static Map<StudentInfoKey, StudentInfo> getStudentInfoMap() {
         return STUDENT_INFO_MAP;
+    }
+
+    public record StudentInfoKey(Integer id, String phone) {
     }
 
 }

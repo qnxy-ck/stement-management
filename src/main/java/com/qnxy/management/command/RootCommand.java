@@ -40,15 +40,10 @@ public enum RootCommand implements Command {
         return cmdDesc;
     }
 
-    public static Optional<RootCommand> cmdNumOf(String cmdNumStr) {
-        try {
-            final int cmdNum = Integer.parseInt(cmdNumStr);
-            
-            return Arrays.stream(values())
-                    .filter(it -> it.cmdNum == cmdNum)
-                    .findFirst();
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
+    public static Optional<RootCommand> cmdNumOf(Integer cmdNum) {
+        return Arrays.stream(values())
+                .filter(it -> it.cmdNum == cmdNum)
+                .findFirst();
+
     }
 }

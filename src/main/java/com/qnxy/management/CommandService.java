@@ -2,37 +2,53 @@ package com.qnxy.management;
 
 import com.qnxy.management.command.QuitConfirmationCommand;
 import com.qnxy.management.command.RootCommand;
-import com.qnxy.management.exceptions.StudentManagementException;
+import com.qnxy.management.data.entity.StudentInfo;
+import com.qnxy.management.data.entity.StudentInfo.Gender;
+import com.qnxy.management.exceptions.ReadCommandMappingException;
+import com.qnxy.management.service.StudentInfoService;
+import com.qnxy.management.util.DateUtil;
 import com.qnxy.management.util.PrintIndentLevel;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import com.qnxy.management.util.ReadCommandUtil;
+import com.qnxy.management.util.StringUtil;
+import lombok.RequiredArgsConstructor;
 
-import java.util.Scanner;
+import java.time.LocalDate;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static com.qnxy.management.util.PrintHelper.printCommandInfo;
 import static com.qnxy.management.util.PrintHelper.printText;
+import static com.qnxy.management.util.PrintIndentLevel.ONE;
 import static com.qnxy.management.util.PrintIndentLevel.ZERO;
+import static com.qnxy.management.util.ReadCommandUtil.readNextCommand;
 
 /**
  * 学生管理命令服务
  *
  * @author Qnxy
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class CommandService {
+@RequiredArgsConstructor
+public class CommandService {
 
-    private static final Scanner SCANNER = new Scanner(System.in);
+    private static final ReadCommandUtil.ReadTextMapping<String> NOT_NULL_MAPPING_FUN = it -> {
+        if (StringUtil.isBlank(it)) {
+            throw new ReadCommandMappingException("输入内容不能为空");
+        }
+        return it;
+    };
 
-    public static void runSystem() {
+
+    private final StudentInfoService studentInfoService;
+
+
+    public void runSystem() {
 
         //noinspection InfiniteLoopStatement
         while (true) {
             printCommandInfo(RootCommand.values(), ZERO);
 
             try {
-                final RootCommand rootCommand = readNextCommand("请输入对应命令: ", ZERO, RootCommand::cmdNumOf)
-                        .orElseThrow(() -> new StudentManagementException("输入指令不存在"));
+                final RootCommand rootCommand = readNextCommand("请输入对应命令: ", ZERO, parseIntValEnum(RootCommand::cmdNumOf));
 
                 switch (rootCommand) {
                     case QUIT -> quit();
@@ -44,86 +60,130 @@ public final class CommandService {
                     case MORE_FIND_METHOD -> moreFindMethod();
                 }
             } catch (Exception e) {
-                printText("操作失败: " + e.getMessage(), ZERO);
+                printText("操作失败: " + e.getMessage() + "\n", ZERO);
             }
         }
     }
 
-    /**
-     * 等待并获取用户输入
-     * 将输入结果进行转换后返回
-     *
-     * @param cmdTips     等待用户输入提示信息
-     * @param indentLevel 提示信息打印层级
-     * @param mapping     转换函数
-     * @param <T>         .
-     * @return .
-     */
-    private static <T> T readNextCommand(String cmdTips, PrintIndentLevel indentLevel, Function<String, T> mapping) {
-        printText(cmdTips, indentLevel);
-        final String cmdStr = SCANNER.nextLine();
-        try {
-            return mapping.apply(cmdStr);
-        } catch (Exception e) {
-            throw new StudentManagementException("信息输入错误 -> " + e.getMessage());
-        }
-    }
 
     /**
      * 更多查询方式
      */
-    private static void moreFindMethod() {
+    private void moreFindMethod() {
         printText("功能暂未实现, 尽请期待.\n", ZERO);
     }
 
     /**
      * 分页查找学生信息
      */
-    private static void findPageStudent() {
+    private void findPageStudent() {
         printText("功能暂未实现, 尽请期待.\n", ZERO);
     }
 
     /**
      * 查询所有学生信息
      */
-    private static void findAllStudent() {
-        printText("功能暂未实现, 尽请期待.\n", ZERO);
+    private void findAllStudent() {
+        studentInfoService.findAll()
+                .forEach(it -> printStudent(it, ONE));
     }
 
     /**
      * 删除学生信息
      */
-    private static void deleteStudent() {
+    private void deleteStudent() {
         printText("功能暂未实现, 尽请期待.\n", ZERO);
     }
 
     /**
      * 更新学生信息
      */
-    private static void updateStudent() {
+    private void updateStudent() {
         printText("功能暂未实现, 尽请期待.\n", ZERO);
     }
 
     /**
      * 添加学生信息
      */
-    private static void addStudent() {
-        printText("功能暂未实现, 尽请期待.\n", ZERO);
+    private void addStudent() {
+        final String nickName = readNextCommand("请输入昵称: ", ONE, NOT_NULL_MAPPING_FUN);
+        final String actualName = readNextCommand("请输入真实姓名: ", ONE, NOT_NULL_MAPPING_FUN);
+        final String phone = readNextCommand("请输入手机号: ", ONE, NOT_NULL_MAPPING_FUN);
+        final LocalDate birthday = readNextCommand("请输入生日, 格式为[yyyy-MM-dd]: ", ONE, toLocalDate());
+        final Gender gender = readNextCommand(String.format("请输入性别, 可选项[%s]: ", Gender.genderNumList()), ONE, parseIntValEnum(Gender::genderNumOf));
+
+        StudentInfo studentInfo = new StudentInfo()
+                .setNickname(nickName)
+                .setActualName(actualName)
+                .setPhone(phone)
+                .setBirthday(birthday)
+                .setGender(gender);
+
+        studentInfo = studentInfoService.addStudentInfo(studentInfo);
+        printText("添加成功: \n", ONE);
+        printStudent(studentInfo, ONE);
     }
 
     /**
      * 退出系统
      */
-    private static void quit() {
+    private void quit() {
         printCommandInfo(QuitConfirmationCommand.values(), ZERO);
-        final QuitConfirmationCommand quitConfirmationCommand = readNextCommand("是否确认退出: ", ZERO, QuitConfirmationCommand::quitNumOf)
-                .orElseThrow(() -> new StudentManagementException("输入错误, 退出命令不存在"));
+        final QuitConfirmationCommand quitConfirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(QuitConfirmationCommand::quitNumOf));
 
         if (quitConfirmationCommand == QuitConfirmationCommand.YES) {
             printText("Bye!", ZERO);
             System.exit(0);
         }
 
+    }
+
+    /**
+     * 将字符串转日期类型
+     */
+    private static ReadCommandUtil.ReadTextMapping<LocalDate> toLocalDate() {
+        return text -> {
+            NOT_NULL_MAPPING_FUN.apply(text);
+
+            try {
+                return DateUtil.textToLocalDate(text);
+            } catch (Exception e) {
+                throw new ReadCommandMappingException("输入信息错误, 不是一个正确的日期格式 -> " + text);
+            }
+        };
+    }
+
+    /**
+     * 解析用户输入的信息, 转换为对应美剧
+     *
+     * @param mapping 转换到那个美剧
+     * @param <E>     枚举类型
+     * @return .
+     */
+    private static <E extends Enum<E>> ReadCommandUtil.ReadTextMapping<E> parseIntValEnum(Function<Integer, Optional<E>> mapping) {
+        return it -> {
+            NOT_NULL_MAPPING_FUN.apply(it);
+            final int genderNum;
+            try {
+                genderNum = Integer.parseInt(it);
+            } catch (NumberFormatException e) {
+                throw new ReadCommandMappingException("不存在的类型 -> " + it);
+            }
+
+            return mapping.apply(genderNum)
+                    .orElseThrow(() -> new ReadCommandMappingException("不存在的类型 -> " + it));
+        };
+    }
+
+
+    /**
+     * 打印学生信息
+     */
+    public static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
+        printText(
+                String.format("- %s", studentInfo),
+                indentLevel
+        );
     }
 
 }

@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 /**
  * 控制台信息打印助手
- * 
+ *
  * @author Qnxy
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -38,7 +38,7 @@ public final class PrintHelper {
                 .orElse(0);
 
         printText("\n", PrintIndentLevel.ZERO);
-        printLine(maxTipsLength, '=');
+        printLine(maxTipsLength);
 
         for (E e : arr) {
             printText(
@@ -46,18 +46,17 @@ public final class PrintHelper {
                     indentLevel
             );
         }
-        printLine(maxTipsLength, '=');
+        printLine(maxTipsLength);
     }
 
     /**
      * 打印分割线
      *
      * @param lineCount 打印数量
-     * @param lineText  分隔线符号
      */
-    private static void printLine(int lineCount, char lineText) {
+    private static void printLine(int lineCount) {
         for (int i = 0; i < lineCount; i++) {
-            System.out.print(lineText);
+            System.out.print('=');
         }
         System.out.println();
     }
@@ -73,6 +72,7 @@ public final class PrintHelper {
             System.out.print(" ");
         }
         System.out.print(text);
-
     }
+
+
 }

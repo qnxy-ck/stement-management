@@ -33,15 +33,11 @@ public enum QuitConfirmationCommand implements Command {
         return cmdDesc;
     }
 
-    public static Optional<QuitConfirmationCommand> quitNumOf(String quitNumStr) {
-        try {
-            final int quitNum = Integer.parseInt(quitNumStr);
+    public static Optional<QuitConfirmationCommand> quitNumOf(Integer quitNum) {
 
-            return Arrays.stream(values())
-                    .filter(it -> it.quitNum == quitNum)
-                    .findFirst();
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+        return Arrays.stream(values())
+                .filter(it -> it.quitNum == quitNum)
+                .findFirst();
+
     }
 }

@@ -5,6 +5,11 @@ import lombok.experimental.Accessors;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.qnxy.management.util.DateUtil.localDateToText;
 
 /**
  * 学生信息实体类
@@ -30,6 +35,11 @@ public class StudentInfo {
      * 必填
      */
     private String nickname;
+
+    /**
+     * 真实姓名
+     */
+    private String actualName;
 
     /**
      * 学生手机号
@@ -69,6 +79,20 @@ public class StudentInfo {
      */
     private LocalDateTime updatedAt;
 
+    @Override
+    public String toString() {
+        return "学生信息{" +
+                "id=" + id +
+                ", 昵称='" + nickname + '\'' +
+                ", 真实姓名='" + actualName + '\'' +
+                ", 手机号='" + phone + '\'' +
+                ", 密码='" + password + '\'' +
+                ", 生日=" + localDateToText(birthday) +
+                ", 性别=" + gender.genderName +
+                ", 创建时间=" + localDateToText(createAt) +
+                ", 更新时间=" + localDateToText(updatedAt) +
+                '}';
+    }
 
     /**
      * 性别信息
@@ -79,20 +103,35 @@ public class StudentInfo {
         /**
          * 未知/不公开
          */
-        UNKNOWN(0),
+        UNKNOWN(0, "不公开"),
 
         /**
          * 女孩
          */
-        GIRL(1),
+        GIRL(1, "女"),
 
         /**
          * 男孩
          */
-        BOY(2);
+        BOY(2, "男");
 
         private final int genderNum;
+        private final String genderName;
 
+        private static final String GENDER_NUMBER_LIST_STR = Arrays.stream(values())
+                .map(it -> String.format("%s: %s", it.genderName, it.genderNum))
+                .collect(Collectors.joining(", "));
+
+        public static String genderNumList() {
+            return GENDER_NUMBER_LIST_STR;
+        }
+
+        public static Optional<Gender> genderNumOf(Integer genderNum) {
+            return Arrays.stream(values())
+                    .filter(it -> it.genderNum == genderNum)
+                    .findFirst();
+
+        }
     }
 
 }

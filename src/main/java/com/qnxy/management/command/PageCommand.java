@@ -22,11 +22,11 @@ public enum PageCommand implements Command {
     private final String cmdDesc;
     @Override
     public int cmdNum() {
-        return 0;
+        return cmdNum;
     }
 
     @Override
     public String cmdDesc() {
-        return null;
+        return cmdDesc;
     }
 }

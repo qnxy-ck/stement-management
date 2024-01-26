@@ -4,7 +4,10 @@ import com.qnxy.management.data.Page;
 import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.service.StudentInfoService;
+import com.qnxy.management.store.MemoryDataStores;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,10 +16,26 @@ import java.util.List;
  * @author Qnxy
  */
 public class StudentInfoServiceImpl implements StudentInfoService {
-    
+
+    private static final String DEFAULT_PASSWORD = "123456";
+
+    private static int INDEX = 1;
+
+    private static int nextIndex() {
+        return INDEX++;
+    }
+
     @Override
     public StudentInfo addStudentInfo(StudentInfo studentInfo) {
-        return null;
+        studentInfo.setId(nextIndex())
+                .setPassword(DEFAULT_PASSWORD)
+                .setCreateAt(LocalDateTime.now())
+                .setUpdatedAt(LocalDateTime.now());
+
+        MemoryDataStores.getStudentInfoMap()
+                .put(new MemoryDataStores.StudentInfoKey(studentInfo.getId(), studentInfo.getPhone()), studentInfo);
+
+        return studentInfo;
     }
 
     @Override
@@ -31,7 +50,7 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public List<StudentInfo> findAll() {
-        return null;
+        return new ArrayList<>(MemoryDataStores.getStudentInfoMap().values());
     }
 
     @Override
