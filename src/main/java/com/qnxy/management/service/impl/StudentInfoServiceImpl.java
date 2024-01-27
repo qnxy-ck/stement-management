@@ -84,10 +84,19 @@ public class StudentInfoServiceImpl implements StudentInfoService {
     }
 
     @Override
-    public Optional<StudentInfo> findPageByPhone( String phone) {
+    public Optional<StudentInfo> findAllByPhone(String phone) {
         return findOneByCondition(
                 MemoryDataStores.getStudentInfoStore(),
                 it -> Objects.equals(it.getPhone(), phone)
+        );
+    }
+
+    @Override
+    public Page<StudentInfo> findAllByActualName(PageReq pageReq, String actualName) {
+        return findPageByCondition(
+                pageReq,
+                MemoryDataStores.getStudentInfoStore(),
+                it -> Objects.equals(it.getActualName(), actualName)
         );
     }
 

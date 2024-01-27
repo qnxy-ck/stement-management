@@ -17,9 +17,10 @@ import java.util.Optional;
 public enum MoreFindMethodCommand implements Command {
     GO_BACK(0, "返回上一级"),
 
-    FIND_BY_ID(1, "指定序号查询学生信息"),
-    FIND_PAGE_BY_AGE(2, "查询指定年龄学生信息"),
-    FIND_PAGE_BY_PHONE(3, "查询指定手机号学生信息"),
+    FIND_BY_ID(1, "指定序号查询"),
+    FIND_PAGE_BY_AGE(2, "指定年龄分页查询"),
+    FIND_BY_PHONE(3, "指定手机号查询"),
+    FIND_PAGE_BY_ACTUAL_NAME(4, "指定真实姓名分页查询"),
     ;
 
     private final int moreFindVal;

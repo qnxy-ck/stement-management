@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * 控制台信息打印助手
@@ -30,7 +29,7 @@ public final class PrintHelper {
      * @param indentLevel 缩进层级
      * @param <E>         限制那个命令集
      */
-    public static <E extends Enum<?> & Command> void printCommandInfo(E[] arr, PrintIndentLevel indentLevel) {
+    public static <E extends Enum<?> & Command> void printCommandList(E[] arr, PrintIndentLevel indentLevel) {
 
         // 计算出打印分割线数量
         final int maxTipsLength = Arrays.stream(arr)
@@ -75,7 +74,7 @@ public final class PrintHelper {
 
     public static void printPageInfo(Page<?> page, PrintIndentLevel indentLevel) {
         final var pageInfo = String.format(
-                "+ 当前页: %s\t当前页条数: %s\t总条数:%s\t总页数:%s%n%n",
+                "* 当前页: %s\t当前页条数: %s\t总条数:%s\t总页数:%s *%n%n",
                 page.getCurrentPage(),
                 page.getCurrentPageSize(),
                 page.getTotal(),

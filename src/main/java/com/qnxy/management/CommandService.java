@@ -23,8 +23,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static com.qnxy.management.util.PrintHelper.*;
-import static com.qnxy.management.util.PrintIndentLevel.ONE;
-import static com.qnxy.management.util.PrintIndentLevel.ZERO;
+import static com.qnxy.management.util.PrintIndentLevel.*;
 import static com.qnxy.management.util.ReadCommandUtil.readNextCommand;
 
 /**
@@ -50,7 +49,7 @@ public class CommandService {
 
         //noinspection InfiniteLoopStatement
         while (true) {
-            printCommandInfo(RootCommand.values(), ZERO);
+            printCommandList(RootCommand.values(), ZERO);
 
             try {
                 final RootCommand rootCommand = readNextCommand("请输入对应命令: ", ZERO, parseIntValEnum(RootCommand::cmdValOf));
@@ -78,7 +77,7 @@ public class CommandService {
      * 更多查询方式
      */
     private boolean moreFindMethod() {
-        printCommandInfo(MoreFindMethodCommand.values(), ONE);
+        printCommandList(MoreFindMethodCommand.values(), ONE);
 
         final MoreFindMethodCommand moreFindMethodCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(MoreFindMethodCommand::moreFindValOf));
         switch (moreFindMethodCommand) {
@@ -87,17 +86,33 @@ public class CommandService {
             }
             case FIND_BY_ID -> this.findById();
             case FIND_PAGE_BY_AGE -> printText("功能暂未实现, 尽请期待.\n", ONE);
-            case FIND_PAGE_BY_PHONE -> this.findPageByPhone();
+            case FIND_BY_PHONE -> this.findByPhone();
+            case FIND_PAGE_BY_ACTUAL_NAME -> this.findPageByActualName();
         }
 
         return true;
     }
 
-    private void findPageByPhone() {
+    private void findPageByActualName() {
+        final String actualName = readNextCommand("请输入姓名: ", ONE, NOT_NULL_MAPPING_FUN);
+
+        loopPageQuery(
+                PageReq.defaultPage(),
+                TWO,
+                it -> this.studentInfoService.findAllByActualName(it, actualName)
+        );
+    }
+
+    private void findByPhone() {
         final String phone = readNextCommand("请输入查询手机号: ", ONE, NOT_NULL_MAPPING_FUN);
 
-        Optional<StudentInfo> pageByPhone = this.studentInfoService.findPageByPhone(phone);
-        printStudent(pageByPhone.orElse(null), ONE);
+        Optional<StudentInfo> pageByPhone = this.studentInfoService.findAllByPhone(phone);
+
+        pageByPhone.ifPresentOrElse(
+                it -> printStudent(it, ONE),
+                () -> printText("没有找到任何匹配数据\n", ONE)
+        );
+
     }
 
     private void findById() {
@@ -105,28 +120,33 @@ public class CommandService {
 
         final Optional<StudentInfo> studentInfoOptional = this.studentInfoService.findById(index);
         printStudent(studentInfoOptional.orElse(null), ONE);
+
+        studentInfoOptional.ifPresentOrElse(
+                it -> printStudent(it, ONE),
+                () -> printText("没有找到任何匹配数据\n", ONE)
+        );
     }
 
     /**
      * 分页查找学生信息
      */
     private void findStudentByPage() {
-        loopPageQuery(PageReq.defaultPage(), this.studentInfoService::findAllByPage);
+        loopPageQuery(PageReq.defaultPage(), ONE, this.studentInfoService::findAllByPage);
     }
 
-    private void loopPageQuery(PageReq pageReq, Function<PageReq, Page<StudentInfo>> pageFind) {
+    private void loopPageQuery(PageReq pageReq, PrintIndentLevel indentLevel, Function<PageReq, Page<StudentInfo>> pageFind) {
         PageReq p = pageReq;
         Page<StudentInfo> page = pageFind.apply(pageReq);
         boolean isFirst = true;
 
 
         while (true) {
-            if (printPageStudent(page, ONE) && isFirst) {
+            if (printPageStudent(page, indentLevel) && isFirst) {
                 return;
             }
 
-            printCommandInfo(PageCommand.values(), ONE);
-            final PageCommand pageCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(PageCommand::pageCmdValOf));
+            printCommandList(PageCommand.values(), indentLevel);
+            final PageCommand pageCommand = readNextCommand("请输入对应命令: ", indentLevel, parseIntValEnum(PageCommand::pageCmdValOf));
 
             switch (pageCommand) {
                 case GO_BACK -> {
@@ -135,7 +155,7 @@ public class CommandService {
 
                 case UP_PAGE -> {
                     if (p.getCurrentPage() <= 1) {
-                        printText("已经是第一页了!\n", ONE);
+                        printText("已经是第一页了!\n", indentLevel);
                         continue;
                     }
                     p = p.upPage();
@@ -143,14 +163,14 @@ public class CommandService {
 
                 case DOWN_PAGE -> {
                     if (p.getCurrentPage() >= page.getTotalPage()) {
-                        printText("已经是最后一页了!\n", ONE);
+                        printText("已经是最后一页了!\n", indentLevel);
                         continue;
                     }
                     p = p.downPage();
                 }
 
                 case PAGE_NUM -> {
-                    final Integer pn = readNextCommand("请输入指定页数: ", ONE, parseToInt());
+                    final Integer pn = readNextCommand("请输入指定页数: ", indentLevel, parseToInt());
 
                     p = PageReq.of(p.getPageSize(), pn);
                 }
@@ -183,7 +203,7 @@ public class CommandService {
     private void deleteStudent() {
         final Integer index = readNextCommand("请输入需要删除的序号: ", ZERO, parseToInt());
 
-        printCommandInfo(ConfirmationCommand.values(), ONE);
+        printCommandList(ConfirmationCommand.values(), ONE);
         final ConfirmationCommand confirmationCommand = readNextCommand("确认删除吗: ", ONE, parseIntValEnum(ConfirmationCommand::confirmValOf));
         if (confirmationCommand != ConfirmationCommand.YES) {
             return;
@@ -226,7 +246,7 @@ public class CommandService {
      * 退出系统
      */
     private void quit() {
-        printCommandInfo(ConfirmationCommand.values(), ZERO);
+        printCommandList(ConfirmationCommand.values(), ZERO);
         final ConfirmationCommand confirmationCommand = readNextCommand("是否确认退出: ", ZERO, parseIntValEnum(ConfirmationCommand::confirmValOf));
 
         if (confirmationCommand == ConfirmationCommand.YES) {
@@ -290,12 +310,6 @@ public class CommandService {
      * 打印学生信息
      */
     private static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
-
-        if (studentInfo == null) {
-            printText("没有找到任何匹配数据\n", ONE);
-            return;
-        }
-
         printText(
                 String.format("- %s%n", studentInfo),
                 indentLevel
@@ -308,7 +322,7 @@ public class CommandService {
     private static boolean printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
         Collection<StudentInfo> studentInfos = studentInfoPage.getRecords();
         if (studentInfos.isEmpty()) {
-            printText("没有找到任何信息!\n", ONE);
+            printText("没有找到任何信息!\n", indentLevel);
             return true;
         }
 

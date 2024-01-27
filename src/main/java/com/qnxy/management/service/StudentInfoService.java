@@ -80,6 +80,14 @@ public interface StudentInfoService {
      * @param phone 查询的学生年龄
      * @return .
      */
-    Optional<StudentInfo> findPageByPhone(String phone);
+    Optional<StudentInfo> findAllByPhone(String phone);
+
+    /**
+     * 根据真实姓名查询
+     *
+     * @param actualName 真实姓名
+     * @return .
+     */
+    Page<StudentInfo> findAllByActualName(PageReq pageReq, String actualName);
 
 }
