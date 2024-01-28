@@ -35,8 +35,6 @@ public class StudentInfoServiceImpl implements StudentInfoService {
     @Override
     public StudentInfo addStudentInfo(StudentInfo studentInfo) {
         studentInfo.setId(nextIndex())
-                .setBirthday(LocalDate.now())
-                .setGender(StudentInfo.Gender.UNKNOWN)
                 .setPassword(DEFAULT_PASSWORD)
                 .setCreateAt(LocalDateTime.now())
                 .setUpdatedAt(LocalDateTime.now());
@@ -50,7 +48,7 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public StudentInfo updateStudentById(StudentInfo studentInfo) {
-        
+
         studentInfo.setUpdatedAt(LocalDateTime.now());
         return studentInfo;
     }
