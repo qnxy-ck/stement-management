@@ -39,13 +39,21 @@ public final class ReadCommandUtil {
                 printText(String.format("- 信息输入错误: %s%n", e.getMessage()), indentLevel);
             }
         }
-
     }
+
+    public static <T> T readNextCommand(String cmdTips, ReadTextMapping<T> readTextMapping) {
+        return readNextCommand(cmdTips, PrintIndentLevel.ZERO, readTextMapping);
+    }
+
 
     @FunctionalInterface
     public interface ReadTextMapping<T> {
 
         T apply(String s) throws ReadCommandMappingException;
 
+
+        static ReadTextMapping<String> string() {
+            return s -> s;
+        }
     }
 }

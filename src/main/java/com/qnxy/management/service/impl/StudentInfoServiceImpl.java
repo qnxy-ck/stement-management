@@ -50,7 +50,9 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public StudentInfo updateStudentById(StudentInfo studentInfo) {
-        return null;
+        
+        studentInfo.setUpdatedAt(LocalDateTime.now());
+        return studentInfo;
     }
 
     @Override

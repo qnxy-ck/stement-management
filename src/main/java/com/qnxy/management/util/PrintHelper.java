@@ -71,6 +71,10 @@ public final class PrintHelper {
         System.out.print(text);
     }
 
+    public static void printText(String text) {
+        printText(text, PrintIndentLevel.ZERO);
+    }
+
 
     public static void printPageInfo(Page<?> page, PrintIndentLevel indentLevel) {
         final var pageInfo = String.format(
