@@ -8,16 +8,11 @@ import com.qnxy.management.data.Page;
 import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.data.entity.StudentInfo.Gender;
-import com.qnxy.management.exceptions.ReadCommandMappingException;
 import com.qnxy.management.service.StudentInfoService;
-import com.qnxy.management.util.DateUtil;
 import com.qnxy.management.util.PrintIndentLevel;
-import com.qnxy.management.util.ReadCommandUtil;
-import com.qnxy.management.util.StringUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -25,8 +20,9 @@ import java.util.function.Function;
 
 import static com.qnxy.management.util.PrintHelper.*;
 import static com.qnxy.management.util.PrintIndentLevel.*;
-import static com.qnxy.management.util.ReadCommandUtil.ReadTextMapping.string;
+import static com.qnxy.management.util.ReadCommandUtil.ReadTextMapping.*;
 import static com.qnxy.management.util.ReadCommandUtil.readNextCommand;
+import static com.qnxy.management.util.ReadCommandUtil.readNotNullValueAndSet;
 
 /**
  * 学生管理命令服务
@@ -35,14 +31,6 @@ import static com.qnxy.management.util.ReadCommandUtil.readNextCommand;
  */
 @RequiredArgsConstructor
 public class CommandService {
-
-    private static final ReadCommandUtil.ReadTextMapping<String> NOT_NULL_MAPPING_FUN = it -> {
-        if (StringUtil.isBlank(it)) {
-            throw new ReadCommandMappingException("输入内容不能为空");
-        }
-        return it;
-    };
-
 
     private final StudentInfoService studentInfoService;
 
@@ -63,10 +51,7 @@ public class CommandService {
                     case DELETE_STUDENT -> deleteStudent();
                     case FIND_ALL_STUDENT -> findAllStudent();
                     case FIND_PAGE_STUDENT -> findStudentByPage();
-                    case MORE_FIND_METHOD -> {
-                        //noinspection StatementWithEmptyBody
-                        while (moreFindMethod()) ;
-                    }
+                    case MORE_FIND_METHOD -> moreFindMethod();
                 }
             } catch (Exception e) {
                 printText("操作失败: " + e.getMessage() + "\n");
@@ -78,51 +63,65 @@ public class CommandService {
     /**
      * 更多查询方式
      */
-    private boolean moreFindMethod() {
-        printCommandList(MoreFindMethodCommand.values(), ONE);
+    private void moreFindMethod() {
+        while (true) {
+            printCommandList(MoreFindMethodCommand.values(), ONE);
 
-        final MoreFindMethodCommand moreFindMethodCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(MoreFindMethodCommand::moreFindValOf));
-        switch (moreFindMethodCommand) {
-            case GO_BACK -> {
-                return false;
+            final MoreFindMethodCommand moreFindMethodCommand = readNextCommand("请输入对应命令: ", ONE, parseIntValEnum(MoreFindMethodCommand::moreFindValOf));
+            switch (moreFindMethodCommand) {
+                case GO_BACK -> {
+                    return;
+                }
+                case FIND_BY_ID -> this.findById();
+                case FIND_PAGE_BY_AGE -> this.findPageByAge();
+                case FIND_BY_PHONE -> this.findByPhone();
+                case FIND_PAGE_BY_ACTUAL_NAME -> this.findPageByActualName();
             }
-            case FIND_BY_ID -> this.findById();
-            case FIND_PAGE_BY_AGE -> printText("功能暂未实现, 尽请期待.\n", ONE);
-            case FIND_BY_PHONE -> this.findByPhone();
-            case FIND_PAGE_BY_ACTUAL_NAME -> this.findPageByActualName();
         }
-
-        return true;
     }
 
+    /**
+     * 根据年龄粉盒查询
+     */
+    private void findPageByAge() {
+        final int age = readNextCommand("请输入年龄: ", ONE, parseToInt());
+
+        loopPageQuery(TWO, it -> this.studentInfoService.findPageByAge(it, age));
+    }
+
+    /**
+     * 根据实际名称分页查询
+     */
     private void findPageByActualName() {
-        final String actualName = readNextCommand("请输入姓名: ", ONE, NOT_NULL_MAPPING_FUN);
+        final String actualName = readNextCommand("请输入姓名: ", ONE, notNull());
 
-        loopPageQuery(
-                PageReq.defaultPage(),
-                TWO,
-                it -> this.studentInfoService.findAllByActualName(it, actualName)
-        );
+        loopPageQuery(TWO, it -> this.studentInfoService.findAllByActualName(it, actualName));
     }
 
+    /**
+     * 根据手机号分页查询
+     */
     private void findByPhone() {
-        final String phone = readNextCommand("请输入查询手机号: ", ONE, NOT_NULL_MAPPING_FUN);
+        final String phone = readNextCommand("请输入查询手机号: ", ONE, notNull());
 
         this.studentInfoService.findAllByPhone(phone)
                 .ifPresentOrElse(
                         it -> printStudent(it, ONE),
-                        () -> printText("没有找到任何匹配数据\n", ONE)
+                        () -> printText("没有找到任何匹配数据!\n", TWO)
                 );
 
     }
 
+    /**
+     * 指定序号查询一条
+     */
     private void findById() {
         final Integer index = readNextCommand("请输入需要查询的序号: ", ONE, parseToInt());
 
         this.studentInfoService.findById(index)
                 .ifPresentOrElse(
                         it -> printStudent(it, ONE),
-                        () -> printText("没有找到任何匹配数据\n", ONE)
+                        () -> printText("没有找到任何匹配数据!\n", TWO)
                 );
     }
 
@@ -130,23 +129,32 @@ public class CommandService {
      * 分页查找学生信息
      */
     private void findStudentByPage() {
-        loopPageQuery(PageReq.defaultPage(), ONE, this.studentInfoService::findAllByPage);
+        loopPageQuery(ONE, this.studentInfoService::findAllByPage);
     }
 
-    private void loopPageQuery(PageReq pageReq, PrintIndentLevel indentLevel, Function<PageReq, Page<StudentInfo>> pageFind) {
-        PageReq p = pageReq;
-        Page<StudentInfo> page = pageFind.apply(pageReq);
-        boolean isFirst = true;
+    private void loopPageQuery(PrintIndentLevel indentLevel, Function<PageReq, Page<StudentInfo>> pageFind) {
+        // 第一次使用默认分页信息
+        PageReq p = PageReq.defaultPage();
+
+        // 使用默认分页信息第一次查询
+        Page<StudentInfo> page = pageFind.apply(p);
+
+        // 如果是第一次查询并且查询结果为空则直接返回
+        if (page.getRecords().isEmpty()) {
+            printText("没有找到任何信息!\n", indentLevel);
+            return;
+        }
+
+        printPageStudent(page, indentLevel);
 
 
         while (true) {
-            if (printPageStudent(page, indentLevel) && isFirst) {
-                return;
-            }
-
+            // 打印出第一次查询的结果后, 打印分页操作相关命令信息
+            // 并等待用户输入
             printCommandList(PageCommand.values(), indentLevel);
             final PageCommand pageCommand = readNextCommand("请输入对应命令: ", indentLevel, parseIntValEnum(PageCommand::pageCmdValOf));
 
+            // 根据输入做出对应指令
             switch (pageCommand) {
                 case GO_BACK -> {
                     return;
@@ -170,13 +178,19 @@ public class CommandService {
 
                 case PAGE_NUM -> {
                     final Integer pn = readNextCommand("请输入指定页数: ", indentLevel, parseToInt());
+                    if (pn > page.getTotalPage() && pn <= 0) {
+                        printText("输入页数范围不正确!\n");
+                        continue;
+                    }
 
                     p = PageReq.of(p.getPageSize(), pn);
                 }
             }
 
+            // 根据用户的操作, 再次查询用户信息
             page = pageFind.apply(p);
-            isFirst = false;
+            printPageStudent(page, indentLevel);
+
         }
     }
 
@@ -226,10 +240,10 @@ public class CommandService {
 
             printText("提示: 如果无需更新直接回车\n");
 
-            readNotNulAndSet("昵称", string(), it::setNickname);
-            readNotNulAndSet("密码", string(), it::setPassword);
-            readNotNulAndSet("性别", parseIntValEnum(Gender::genderValOf), it::setGender);
-            readNotNulAndSet("生日", toLocalDate(), it::setBirthday);
+            readNotNullValueAndSet("昵称", string(), it::setNickname);
+            readNotNullValueAndSet("密码", string(), it::setPassword);
+            readNotNullValueAndSet("性别", parseIntValEnum(Gender::genderValOf), it::setGender);
+            readNotNullValueAndSet("生日", toLocalDate(), it::setBirthday);
 
             StudentInfo studentInfo = this.studentInfoService.updateStudentById(it);
             printText("更新完成\n");
@@ -240,24 +254,13 @@ public class CommandService {
         studentInfoOptional.ifPresentOrElse(updateAction, () -> printText("该序号不存在, 无法更新 -> " + index + "\n"));
     }
 
-
-    private static <T> void readNotNulAndSet(String tips, ReadCommandUtil.ReadTextMapping<T> mapping, Consumer<T> setConsumer) {
-        readNextCommand("请输入" + tips + ": ", it -> {
-            if (StringUtil.noBlank(it)) {
-                T value = mapping.apply(it);
-                setConsumer.accept(value);
-            }
-            return null;
-        });
-    }
-
     /**
      * 添加学生信息
      */
     private void addStudent() {
-        final String nickName = readNextCommand("请输入昵称: ", ONE, NOT_NULL_MAPPING_FUN);
-        final String actualName = readNextCommand("请输入真实姓名: ", ONE, NOT_NULL_MAPPING_FUN);
-        final String phone = readNextCommand("请输入手机号: ", ONE, NOT_NULL_MAPPING_FUN);
+        final String nickName = readNextCommand("请输入昵称: ", ONE, notNull());
+        final String actualName = readNextCommand("请输入真实姓名: ", ONE, notNull());
+        final String phone = readNextCommand("请输入手机号: ", ONE, notNull());
         final LocalDate birthday = readNextCommand("请输入生日, 格式为[yyyy-MM-dd]: ", ONE, toLocalDate());
         final Gender gender = readNextCommand(String.format("请输入性别, 可选项[%s]: ", Gender.genderNumList()), ONE, parseIntValEnum(Gender::genderValOf));
 
@@ -287,57 +290,6 @@ public class CommandService {
     }
 
     /**
-     * 将字符串转日期类型
-     */
-    private static ReadCommandUtil.ReadTextMapping<LocalDate> toLocalDate() {
-        return text -> {
-            NOT_NULL_MAPPING_FUN.apply(text);
-
-            try {
-                return DateUtil.textToLocalDate(text);
-            } catch (Exception e) {
-                throw new ReadCommandMappingException("输入信息错误, 不是一个正确的日期格式 -> " + text);
-            }
-        };
-    }
-
-    /**
-     * 解析用户输入的信息, 转换为对应枚举
-     *
-     * @param mapping 转换到那个美剧
-     * @param <E>     枚举类型
-     * @return .
-     */
-    private static <E extends Enum<E>> ReadCommandUtil.ReadTextMapping<E> parseIntValEnum(Function<Integer, Optional<E>> mapping) {
-        return it -> {
-            NOT_NULL_MAPPING_FUN.apply(it);
-            final int intVal;
-            try {
-                intVal = Integer.parseInt(it);
-            } catch (NumberFormatException e) {
-                throw new ReadCommandMappingException("不存在的命令 -> " + it);
-            }
-
-            return mapping.apply(intVal)
-                    .orElseThrow(() -> new ReadCommandMappingException("不存在的命令 -> " + it));
-        };
-    }
-
-    /**
-     * 将字符串转换为int类型
-     */
-    private static ReadCommandUtil.ReadTextMapping<Integer> parseToInt() {
-        return it -> {
-            NOT_NULL_MAPPING_FUN.apply(it);
-            try {
-                return Integer.parseInt(it);
-            } catch (NumberFormatException e) {
-                throw new ReadCommandMappingException("请输入正确的数值 -> " + it);
-            }
-        };
-    }
-
-    /**
      * 打印学生信息
      */
     private static void printStudent(StudentInfo studentInfo, PrintIndentLevel indentLevel) {
@@ -347,20 +299,14 @@ public class CommandService {
         );
     }
 
-    /***
-     * 没有数据直接返回 true
-     */
-    private static boolean printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
-        Collection<StudentInfo> studentInfos = studentInfoPage.getRecords();
-        if (studentInfos.isEmpty()) {
-            printText("没有找到任何信息!\n", indentLevel);
-            return true;
-        }
 
-        studentInfos.forEach(it -> printStudent(it, indentLevel));
+    private static void printPageStudent(Page<StudentInfo> studentInfoPage, PrintIndentLevel indentLevel) {
+        // 打印学生信息
+        studentInfoPage.getRecords()
+                .forEach(it -> printStudent(it, indentLevel));
+
+        // 打印页数信息
         printPageInfo(studentInfoPage, indentLevel);
-
-        return false;
     }
 
 }

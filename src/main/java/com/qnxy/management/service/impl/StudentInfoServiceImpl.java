@@ -9,6 +9,7 @@ import com.qnxy.management.store.MemoryDataStores;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -80,7 +81,11 @@ public class StudentInfoServiceImpl implements StudentInfoService {
 
     @Override
     public Page<StudentInfo> findPageByAge(PageReq pageReq, Integer age) {
-        return null;
+        return findPageByCondition(
+                pageReq,
+                MemoryDataStores.getStudentInfoStore(),
+                it -> Period.between(it.getBirthday(), LocalDate.now()).getYears() == age
+        );
     }
 
     @Override

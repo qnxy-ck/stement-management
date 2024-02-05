@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * 内存存储信息
@@ -35,7 +34,7 @@ public final class MemoryDataStores {
                             .setActualName("ck")
                             .setPhone("123465787654" + i)
                             .setPassword("123456")
-                            .setBirthday(LocalDate.now())
+                            .setBirthday(LocalDate.now().plusYears(-18))
                             .setGender(StudentInfo.Gender.UNKNOWN)
                             .setCreateAt(LocalDateTime.now())
                             .setUpdatedAt(LocalDateTime.now())
@@ -51,12 +50,6 @@ public final class MemoryDataStores {
         return sourceCollection.stream()
                 .filter(predicate)
                 .findFirst();
-    }
-
-    public static <T> List<T> findAllByCondition(Set<T> sourceCollection, Predicate<T> predicate) {
-        return sourceCollection.stream()
-                .filter(predicate)
-                .collect(Collectors.toList());
     }
 
     public static <T> Page<T> findPageByCondition(PageReq pageReq, Set<T> sourceCollection, Predicate<T> predicate) {
