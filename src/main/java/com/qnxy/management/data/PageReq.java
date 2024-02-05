@@ -16,12 +16,12 @@ public final class PageReq {
     /**
      * 每页默认大小
      */
-    private static final int DEFAULT_PAGE_SIZE = 10;
+    public static final int DEFAULT_PAGE_SIZE = 10;
 
     /**
      * 每页大小最大值
      */
-    private static final int DEFAULT_MAX_PAGE_SIZE = 30;
+    public static final int DEFAULT_MAX_PAGE_SIZE = 30;
 
     /**
      * 查询每页展示条数

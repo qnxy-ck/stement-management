@@ -18,7 +18,9 @@ public enum PageCommand implements Command {
     GO_BACK(0, "返回上一级"),
     UP_PAGE(1, "上一页"),
     DOWN_PAGE(2, "下一页"),
-    PAGE_NUM(3, "指定页数查询");
+    PAGE_NUM(3, "指定页数查询"),
+    SET_DEFAULT_PAGE_SIZE(4, "设置分页每页数量(默认为10条)"),
+    ;
 
     private final int pageCmdVal;
     private final String cmdDesc;

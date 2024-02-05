@@ -8,6 +8,7 @@ import com.qnxy.management.data.Page;
 import com.qnxy.management.data.PageReq;
 import com.qnxy.management.data.entity.StudentInfo;
 import com.qnxy.management.data.entity.StudentInfo.Gender;
+import com.qnxy.management.exceptions.ReadCommandMappingException;
 import com.qnxy.management.service.StudentInfoService;
 import com.qnxy.management.util.PrintIndentLevel;
 import lombok.RequiredArgsConstructor;
@@ -177,7 +178,7 @@ public class CommandService {
                 }
 
                 case PAGE_NUM -> {
-                    final Integer pn = readNextCommand("请输入指定页数: ", indentLevel, parseToInt());
+                    final int pn = readNextCommand("请输入指定页数: ", indentLevel, parseToInt());
                     if (pn > page.getTotalPage() && pn <= 0) {
                         printText("输入页数范围不正确!\n");
                         continue;
@@ -185,6 +186,25 @@ public class CommandService {
 
                     p = PageReq.of(p.getPageSize(), pn);
                 }
+
+                case SET_DEFAULT_PAGE_SIZE -> {
+                    final int defaultPageSize = readNextCommand("请输入分页默认大小(仅本次查询生效): ", indentLevel, it -> {
+                        Integer i = parseToInt().apply(it);
+
+                        if (i < PageReq.DEFAULT_PAGE_SIZE) {
+                            throw new ReadCommandMappingException("每页最小数量为: " + PageReq.DEFAULT_PAGE_SIZE);
+                        }
+
+                        if (i > PageReq.DEFAULT_MAX_PAGE_SIZE) {
+                            throw new ReadCommandMappingException("每页最大数量为: " + PageReq.DEFAULT_MAX_PAGE_SIZE);
+                        }
+
+                        return i;
+                    });
+
+                    p = PageReq.of(defaultPageSize, 1);
+                }
+
             }
 
             // 根据用户的操作, 再次查询用户信息
@@ -258,9 +278,9 @@ public class CommandService {
      * 添加学生信息
      */
     private void addStudent() {
+        final String phone = readNextCommand("请输入手机号: ", ONE, notNull());
         final String nickName = readNextCommand("请输入昵称: ", ONE, notNull());
         final String actualName = readNextCommand("请输入真实姓名: ", ONE, notNull());
-        final String phone = readNextCommand("请输入手机号: ", ONE, notNull());
         final LocalDate birthday = readNextCommand("请输入生日, 格式为[yyyy-MM-dd]: ", ONE, toLocalDate());
         final Gender gender = readNextCommand(String.format("请输入性别, 可选项[%s]: ", Gender.genderNumList()), ONE, parseIntValEnum(Gender::genderValOf));
 

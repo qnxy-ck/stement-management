@@ -36,7 +36,7 @@ public final class DateUtil {
      * @param dateTime 日期时间
      * @return .
      */
-    public static String localDateToText(LocalDateTime dateTime) {
+    public static String localDateTimeToText(LocalDateTime dateTime) {
         return dateTime.format(DATE_TIME_FORMATTER);
     }
 

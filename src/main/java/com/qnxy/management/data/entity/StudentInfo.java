@@ -1,5 +1,6 @@
 package com.qnxy.management.data.entity;
 
+import com.qnxy.management.util.DateUtil;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -105,8 +106,8 @@ public class StudentInfo {
                 ", 密码='" + password + '\'' +
                 ", 生日=" + localDateToText(birthday) +
                 ", 性别=" + gender.genderName +
-                ", 创建时间=" + localDateToText(createAt) +
-                ", 更新时间=" + localDateToText(updatedAt) +
+                ", 创建时间=" + DateUtil.localDateTimeToText(createAt) +
+                ", 更新时间=" + DateUtil.localDateTimeToText(updatedAt) +
                 '}';
     }
 
