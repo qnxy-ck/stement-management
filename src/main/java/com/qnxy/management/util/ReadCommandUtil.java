@@ -102,10 +102,7 @@ public final class ReadCommandUtil {
          */
         static ReadTextMapping<Integer> parseToInt() {
             return it -> {
-
-                if (StringUtil.isBlank(it)) {
-                    throw new ReadCommandMappingException("输入内容不能为空");
-                }
+                notNull().apply(it);
 
                 try {
                     return Integer.parseInt(it);
@@ -131,14 +128,16 @@ public final class ReadCommandUtil {
             };
         }
 
+        static Optional<String> s() {
+            return Optional.empty();
+        }
+
         /**
          * 将字符串转日期类型
          */
         static ReadTextMapping<LocalDate> toLocalDate() {
             return it -> {
-                if (StringUtil.isBlank(it)) {
-                    throw new ReadCommandMappingException("输入内容不能为空");
-                }
+                notNull().apply(it);
 
                 try {
                     return DateUtil.textToLocalDate(it);

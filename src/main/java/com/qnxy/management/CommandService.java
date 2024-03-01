@@ -250,7 +250,7 @@ public class CommandService {
      * 更新学生信息
      */
     private void updateStudent() {
-        final Integer index = readNextCommand("请输入需要删除的序号: ", parseToInt());
+        final Integer index = readNextCommand("请输入需要更新的序号: ", parseToInt());
         final Optional<StudentInfo> studentInfoOptional = this.studentInfoService.findById(index);
 
 
